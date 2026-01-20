@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PlayZone – Games Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; font-family: Arial, sans-serif; }
+    body { margin: 0; background: #0f172a; color: #e5e7eb; }
+
+    header { background: #1e293b; padding: 20px; text-align: center; }
+    header h1 { margin: 0; color: #38bdf8; }
+
+    nav {
+      display: flex; justify-content: center; gap: 15px;
+      background: #020617; padding: 10px;
+    }
+    nav button {
+      background: #1e293b; color: #e5e7eb; border: none;
+      padding: 10px 18px; border-radius: 8px; cursor: pointer;
+    }
+    nav button.active { background: #38bdf8; color: #020617; }
+
+    .container { max-width: 900px; margin: auto; padding: 20px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* Tic Tac Toe */
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      gap: 10px; justify-content: center; margin-top: 20px;
+    }
+    .cell {
+      width: 100px; height: 100px;
+      background: #1e293b;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px; cursor: pointer; border-radius: 10px;
+    }
+
+    /* Snake */
+    canvas {
+      background: #020617;
+      display: block; margin: 20px auto;
+      border-radius: 12px;
+    }
+
+    /* Contact */
+    .contact-box {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 500px;
+      margin: auto;
+    }
+    .contact-box input,
+    .contact-box textarea {
+      width: 100%;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+    }
+    .contact-box button {
+      background: #38bdf8;
+      color: #020617;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      font-weight: bold;
+    }
+
+    footer {
+      text-align: center;
+      padding: 15px;
+      background: #020617;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>PlayZone</h1>
+  <p>Made by <strong>Sanskar</strong> • Place: <strong>Your Place</strong></p>
+</header>
+
+<nav>
+  <button class="active" onclick="showPage('home', this)">Home</button>
+  <button onclick="showPage('tic', this)">Tic Tac Toe</button>
+  <button onclick="showPage('snake', this)">Snake</button>
+  <button onclick="showPage('contact', this)">Contact / Report Bug</button>
+</nav>
+
+<div class="container">
+
+  <div id="home" class="page active">
+    <h2>Welcome 🎮</h2>
+    <p>Play games on the same website. Found a glitch? Report it in the contact section.</p>
+  </div>
+
+  <div id="tic" class="page">
+    <h2>Tic Tac Toe</h2>
+    <p id="ticStatus">Player X's turn</p>
+    <div class="board" id="board"></div>
+  </div>
+
+  <div id="snake" class="page">
+    <h2>Snake Game</h2>
+    <p>Use arrow keys to play</p>
+    <canvas id="snakeCanvas" width="400" height="400"></canvas>
+  </div>
+
+  <div id="contact" class="page">
+    <h2>Contact / Glitch Report 🛠️</h2>
+    <div class="contact-box">
+      <p><strong>Developer:</strong> Sanskar</p>
+      <p><strong>Place:</strong> noobsanskar33@gmail.com</p>
+
+      <input type="text" id="userName" placeholder="Your Name" />
+      <input type="text" id="userContact" placeholder="Your Contact (email/number)" />
+      <textarea id="userMessage" rows="4" placeholder="Describe the glitch or issue..."></textarea>
+      <button onclick="sendMessage()">Send Message</button>
+
+      <p id="msgStatus"></p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>© 2026 PlayZone | Developed by Sunkar</p>
+</footer>
+
+<script>
+  function showPage(id, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  /* Tic Tac Toe */
+  const board = document.getElementById('board');
+  const status = document.getElementById('ticStatus');
+  let cells = Array(9).fill(null);
+  let current = "X";
+
+  function checkWin() {
+    const wins = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+    return wins.some(w => w.every(i => cells[i] === current));
+  }
+
+  function drawBoard() {
+    board.innerHTML = "";
+    cells.forEach((v,i) => {
+      const c = document.createElement("div");
+      c.className = "cell";
+      c.textContent = v || "";
+      c.onclick = () => {
+        if (!cells[i]) {
+          cells[i] = current;
+          if (checkWin()) {
+            status.textContent = "Player " + current + " wins!";
+            cells = Array(9).fill(null);
+            current = "X";
+          } else {
+            current = current === "X" ? "O" : "X";
+            status.textContent = "Player " + current + "'s turn";
+          }
+          drawBoard();
+        }
+      };
+      board.appendChild(c);
+    });
+  }
+  drawBoard();
+
+  /* Snake */
+  const canvas = document.getElementById("snakeCanvas");
+  const ctx = canvas.getContext("2d");
+  let snake = [{x:200,y:200}];
+  let dir = {x:20,y:0};
+  let food = {x:100,y:100};
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp") dir={x:0,y:-20};
+    if (e.key === "ArrowDown") dir={x:0,y:20};
+    if (e.key === "ArrowLeft") dir={x:-20,y:0};
+    if (e.key === "ArrowRight") dir={x:20,y:0};
+  });
+
+  function gameLoop() {
+    ctx.clearRect(0,0,400,400);
+    const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+    snake.unshift(head);
+
+    if (head.x === food.x && head.y === food.y) {
+      food = {
+        x: Math.floor(Math.random()*20)*20,
+        y: Math.floor(Math.random()*20)*20
+      };
+    } else {
+      snake.pop();
+    }
+
+    ctx.fillStyle = "#38bdf8";
+    snake.forEach(s => ctx.fillRect(s.x,s.y,18,18));
+    ctx.fillStyle = "#f87171";
+    ctx.fillRect(food.x,food.y,18,18);
+  }
+  setInterval(gameLoop, 150);
+
+  /* Contact (Frontend function) */
+  function sendMessage() {
+    const name = document.getElementById("userName").value;
+    const contact = document.getElementById("userContact").value;
+    const msg = document.getElementById("userMessage").value;
+
+    if (!name || !contact || !msg) {
+      document.getElementById("msgStatus").textContent = "Please fill all fields.";
+      return;
+    }
+
+    document.getElementById("msgStatus").textContent =
+      "Thanks! Your message has been sent to Sunkar.";
+
+    document.getElementById("userName").value = "";
+    document.getElementById("userContact").value = "";
+    document.getElementById("userMessage").value = "";
+  }
+</script>
+
+</body>
+</html>
